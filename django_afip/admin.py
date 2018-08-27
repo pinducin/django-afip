@@ -184,6 +184,48 @@ class ReceiptAdmin(admin.ModelAdmin):
 
     readonly_fields = __related_fields
 
+
+    def response_add(self, request, new_object):
+        obj = self.after_saving_model_and_related_inlines(new_object)
+        return super(ReceiptAdmin, self).response_add(request, obj)
+
+    def response_change(self, request, obj):
+        obj = self.after_saving_model_and_related_inlines(obj)
+        return super(ReceiptAdmin, self).response_change(request, obj)
+
+    def after_saving_model_and_related_inlines(self, obj):
+        receipt_vat = models.Vat()
+        obj.total_amount = 0
+        obj.net_taxed = 0
+        obj.vat.all().delete()
+        for entry in obj.entries.all():
+            exist = False
+            for vat in obj.vat.all():            
+                if vat.vat_type.code == entry.vat.code:
+                    exist = True
+                    receipt_vat = vat
+            if exist:
+                receipt_vat.base_amount += entry.total_price
+                receipt_vat.amount += entry.total_price * entry.vat.value
+            else:
+                receipt_vat = models.Vat(vat_type = entry.vat, 
+                    base_amount=entry.total_price, 
+                    amount=entry.total_price * entry.vat.value,
+                    receipt=obj)
+            
+            print(obj.receipt_type.code)
+            
+            if int(obj.receipt_type.code) >= 11 and int(obj.receipt_type.code) <= 15:
+                obj.net_taxed += entry.total_price
+                obj.total_amount += entry.total_price + obj.exempt_amount 
+            else:
+                obj.net_taxed += entry.total_price
+                obj.total_amount += entry.total_price + obj.exempt_amount + (entry.total_price * entry.vat.value)     
+                receipt_vat.save()       
+            obj.save()
+        return obj
+
+
     def get_queryset(self, request):
         return super().get_queryset(request) \
             .select_related(

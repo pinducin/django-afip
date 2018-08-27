@@ -64,9 +64,30 @@ WSGI_APPLICATION = 'testapp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-DATABASES = {
+
+DEVELOPMENT_DATABASES = {
     'default': dj_database_url.config(default='sqlite:///db.sqlite3'),
 }
+
+PRODUCTION_DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'HOST': 'db',
+        'PORT': 5432
+    }
+}
+
+# Database
+# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
+
+DATABASE_PROFILES = {
+    'production': PRODUCTION_DATABASES,
+    'development': DEVELOPMENT_DATABASES
+}
+
+DATABASES = DATABASE_PROFILES[os.environ.get('APP_PROFILE','production')]
 
 
 # Internationalization
@@ -74,7 +95,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Cordoba'
 
 USE_I18N = True
 

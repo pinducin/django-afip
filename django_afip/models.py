@@ -205,6 +205,16 @@ class VatType(GenericAfipType):
 
     objects = GenericAfipTypeManager('FEParamGetTiposIva', 'IvaTipo')
 
+    # TODO: Not implemented: optionals
+    # TODO: methods to validate value
+
+    @property
+    def value(self):
+        from decimal import Decimal
+        """Returns the sum of all Vat objects."""
+        q = Decimal(self.description[:-1]) / 100
+        return q
+    
     class Meta:
         verbose_name = _('vat type')
         verbose_name_plural = _('vat types')

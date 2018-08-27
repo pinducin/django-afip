@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+  api:
+    build: .
+    command: runserver 0.0.0.0:8000
+    entrypoint: python3 manage.py
+    volumes:
+      - ./testapp:/code
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    deploy:
+      restart_policy:
+        condition: always
+        delay: 5s
+        max_attempts: 3
+        window: 10s
+  
+

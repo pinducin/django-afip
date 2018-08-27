@@ -1,0 +1,11 @@
+Django==2.1
+dj-database-url
+psycopg2
+psycopg2-binary
+#django_afip
+django_renderpdf>=0.1.0
+lxml>=3.4.4
+pyopenssl>=16.2.0
+python-barcode>=0.8.0
+pytz>=2015.4
+zeep>=1.1.0
