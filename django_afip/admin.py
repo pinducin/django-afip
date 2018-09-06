@@ -160,7 +160,38 @@ class ReceiptAdmin(admin.ModelAdmin):
         'related_receipts',
     )
     date_hierarchy = 'issued_date'
+    readonly_fields = ["document_type", "document_number", ]
+    '''
+    fieldsets = (
+        ('Receipt Data', {
+            'fields': (('point_of_sales', 
+            'receipt_type',
+            'concept', 
+            'customer',
+            'issued_date'),)
+        })
+        ,
+        ('Totals', {
+            'fields': (('net_untaxed',
+            'exempt_amount',
+            'net_taxed',
+            'total_amount'),)
+        })
+        ,
+        ('Service Date', {
+            'fields': (('service_start',
+            'service_end',
+            ),)
+        }),
+        ('Related Receipts', {
+            'fields': (('related_receipts',),)
+        }),
+        ('Validate', {
+            'fields': (('expiration_date',),)
+        }),
 
+    )
+    '''
     def get_exclude(self, request, obj=None):
         if django.VERSION < (2, 0):
             # This field would load every single receipts for the widget which
@@ -436,6 +467,7 @@ class ReceiptPDFAdmin(admin.ModelAdmin):
         'receipt_id',
         'client_name',
         'has_file',
+        'pdf_file',
     )
     raw_id_fields = (
         'receipt',
@@ -455,6 +487,26 @@ class ReceiptPDFAdmin(admin.ModelAdmin):
     actions = (
         generate_pdf,
     )
+    
+    def get_changeform_initial_data(self, request):
+        initial = super(ReceiptPDFAdmin, self).get_changeform_initial_data(request)
+
+        profile = models.Receipt.objects.get(pk=initial['receipt']).point_of_sales.owner.profile
+
+        initial['issuing_name'] = profile.issuing_name
+        initial['issuing_address'] = profile.issuing_address
+        initial['issuing_email'] = profile.issuing_email
+        initial['vat_condition'] = profile.vat_condition
+        initial['sales_terms'] = profile.sales_terms
+        initial['gross_income_condition'] = profile.gross_income_condition
+
+        customer = models.Receipt.objects.get(pk=initial['receipt']).customer
+        
+        initial['client_name'] = customer.name
+        initial['client_address'] = customer.address
+        initial['client_vat_condition'] = customer.vat_condition
+        
+        return initial
 
 
 @admin.register(models.ReceiptValidation)
@@ -489,3 +541,15 @@ for model in app.get_models():
         admin.site.register(model)
     except AlreadyRegistered:
         pass
+
+admin.site.unregister(models.Customer)
+@admin.register(models.Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'document_type',
+        'document_number',
+        'name',
+        'address',
+    )
+    

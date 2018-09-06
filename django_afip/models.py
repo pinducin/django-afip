@@ -877,6 +877,46 @@ class ReceiptManager(models.Manager):
             'receipt_type',
         )
 
+class Customer(models.Model):
+    """
+
+    """
+    document_type = models.ForeignKey(
+        DocumentType,
+        verbose_name=_('document type'),
+        related_name='customer',
+        help_text=_(
+            'The document type of the customer to whom this receipt '
+            'is addressed'
+        ),
+        on_delete=models.PROTECT,
+    )
+    document_number = models.BigIntegerField(
+        _('document number'),
+        help_text=_(
+            'The document number of the customer to whom this receipt '
+            'is addressed'
+        )
+    )
+    name = models.CharField(
+        max_length=128,
+        verbose_name=_('client name'),
+    )
+    address = models.TextField(
+        _('client address'),
+        blank=True,
+    )
+    vat_condition = models.CharField(
+        max_length=48,
+        choices=((cond, cond,) for cond in CLIENT_VAT_CONDITIONS),
+        verbose_name=_('client vat condition'),
+    )
+    def __str__(self):
+            return '{} {}'.format(self.name, self.document_number)
+    class Meta:
+        verbose_name = _('customer')
+        verbose_name_plural = _('customers')
+
 
 class Receipt(models.Model):
     """
@@ -911,6 +951,12 @@ class Receipt(models.Model):
         related_name='receipts',
         on_delete=models.PROTECT,
     )
+    customer = models.ForeignKey(
+        Customer,
+        verbose_name=_('customer'),
+        related_name='receipts',
+        on_delete=models.PROTECT,
+    )
     document_type = models.ForeignKey(
         DocumentType,
         verbose_name=_('document type'),
@@ -920,13 +966,16 @@ class Receipt(models.Model):
             'is addressed'
         ),
         on_delete=models.PROTECT,
+        blank=True,
     )
     document_number = models.BigIntegerField(
         _('document number'),
         help_text=_(
             'The document number of the customer to whom this receipt '
             'is addressed'
-        )
+        ),
+        default=0,
+        blank=True,
     )
     # NOTE: WS will expect receipt_from and receipt_to.
     receipt_number = models.PositiveIntegerField(
@@ -950,7 +999,8 @@ class Receipt(models.Model):
         help_text=_(
             'Must be equal to the sum of net_taxed, exempt_amount, net_taxes, '
             'and all taxes and vats.'
-        )
+        ),
+        default=0,
     )
     net_untaxed = models.DecimalField(
         # ImpTotConc
@@ -961,6 +1011,7 @@ class Receipt(models.Model):
             'The total amount to which taxes do not apply. '
             'For C-type receipts, this must be zero.'
         ),
+        default=0,
     )
     net_taxed = models.DecimalField(
         # ImpNeto
@@ -971,6 +1022,7 @@ class Receipt(models.Model):
             'The total amount to which taxes apply. '
             'For C-type receipts, this is equal to the subtotal.'
         ),
+        default=0,
     )
     exempt_amount = models.DecimalField(
         # ImpOpEx
@@ -982,6 +1034,7 @@ class Receipt(models.Model):
             'Only for categories which are tax-exempt. '
             'For C-type receipts, this must be zero.'
         ),
+        default=0,
     )
     service_start = models.DateField(
         _('service start date'),
@@ -1124,7 +1177,7 @@ class Receipt(models.Model):
         verbose_name = _('receipt')
         verbose_name_plural = _('receipts')
         unique_together = (
-            ('point_of_sales', 'receipt_type', 'receipt_number',)
+            ('point_of_sales', 'receipt_type', 'receipt_number', 'customer',)
         )
         # TODO: index_together...
 

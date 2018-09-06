@@ -497,3 +497,18 @@ msgstr "validaciones de comprobante"
 #, python-format
 msgid "receipt %s.pdf"
 msgstr "comprobante %s.pdf"
+
+# Aca arranco con los mensajes
+#, python-format
+msgid "Service Date"
+msgstr "Fecha Servicio"
+
+msgid "Totals"
+msgstr "Totales"
+
+msgid "Receipt Data"
+msgstr "Datos Comprobante"
+
+msgid "Related Receipts"
+msgstr "Otros Comrobantes"
+

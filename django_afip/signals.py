@@ -14,3 +14,9 @@ def update_certificate_expiration(sender, instance, **kwargs):
 def generate_receipt_pdf(sender, instance, **kwargs):
     if not instance.pdf_file and instance.receipt.is_validated:
         instance.save_pdf(save_model=True)
+
+@receiver(pre_save, sender=models.Receipt)
+def update_receipt(sender, instance, **kwargs):
+    print("update_receipt")
+    instance.document_type = instance.customer.document_type
+    instance.document_number = instance.customer.document_number
